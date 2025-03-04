@@ -13,7 +13,7 @@ const StartGame = () => {
         {/* Dice Image */}
         <div className="flex-shrink-0">
           <img
-            src="src/assets/dice-main.png"
+            src="https://res.cloudinary.com/dqela8lj8/image/upload/v1741114821/lis2ajxpfasviwxd6cbe.png"
             alt="Dice Game"
             className="w-[220px] sm:w-[400px] md:w-auto h-auto animate-bounce"
           />
@@ -34,20 +34,20 @@ const StartGame = () => {
 
           <button
             onClick={() => setGameStart(true)}
-            class=" cursor-pointer relative inline-flex items-center justify-center p-4 px-6 py-3 overflow-hidden font-medium text-blacktransition duration-300 ease-out border-2 border-gray-500 rounded-full shadow-md group"
+            className=" cursor-pointer relative inline-flex items-center justify-center p-4 px-6 py-3 overflow-hidden font-medium text-blacktransition duration-300 ease-out border-2 border-gray-500 rounded-full shadow-md group"
           >
-            <span class="absolute inset-0 flex items-center justify-center w-full h-full text-white duration-300 -translate-x-full bg-gray-500 group-hover:translate-x-0 ease">
+            <span className="absolute inset-0 flex items-center justify-center w-full h-full text-white duration-300 -translate-x-full bg-gray-500 group-hover:translate-x-0 ease">
               <svg
-                class="w-6 h-6"
+                className="w-6 h-6"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
                   d="M14 5l7 7m0 0l-7 7m7-7H3"
                 ></path>
               </svg>

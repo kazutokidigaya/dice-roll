@@ -13,7 +13,6 @@ const DiceGame = () => {
   const [error, setError] = useState(null);
   const diceRef = useRef(null);
 
-  // On mount, get window dimensions and balance from localStorage
   useEffect(() => {
     setDimensions({ width: window.innerWidth, height: window.innerHeight });
     const storedBalance = localStorage.getItem("playerBalance");
@@ -23,7 +22,6 @@ const DiceGame = () => {
       localStorage.setItem("playerBalance", "1000");
     }
 
-    // Basic Web3 integration: request wallet access if available
     if (window.ethereum) {
       window.ethereum
         .request({ method: "eth_requestAccounts" })
@@ -83,25 +81,24 @@ const DiceGame = () => {
     }
     setError(null);
 
-    // Generate a clientSeed (could be any random string)
+    // Generate a clientSeed
     const clientSeed = Math.random().toString(36).substring(2, 15);
 
     try {
-      const response = await fetch("http://localhost:5000/roll-dice", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bet: betAmount, balance, clientSeed }),
-      });
+      const response = await fetch(
+        "https://dice-roll-red.vercel.app/roll-dice",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ bet: betAmount, balance, clientSeed }),
+        }
+      );
       const data = await response.json();
       if (data.error) {
         setError(data.error);
         return;
       }
       const { roll, newBalance, serverSeed, hashProof } = data;
-      // (Optional) You can log serverSeed, hashProof and clientSeed for provable fairness verification.
-      console.log("Server Seed:", serverSeed);
-      console.log("Hash Proof:", hashProof);
-      console.log("Client Seed:", clientSeed);
 
       // Trigger dice animation based on the roll
       rollDiceEffect(roll);
@@ -132,7 +129,7 @@ const DiceGame = () => {
       {/* Error Alert */}
       {error && (
         <div
-          className="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4 dark:bg-red-800/10 dark:border-red-900 dark:text-red-500 w-full max-w-md mb-4"
+          className="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4 dark:bg-red-800/10 dark:border-red-900 dark:text-red-500 w-full  mb-4"
           role="alert"
           tabIndex="-1"
           aria-labelledby="hs-with-list-label"
@@ -164,7 +161,7 @@ const DiceGame = () => {
             </div>
             <button
               onClick={() => setError(null)}
-              className="ml-auto text-red-800 dark:text-red-500 text-xl font-bold"
+              className="cursor-pointer ml-auto text-red-800 dark:text-red-500 text-xl font-bold"
             >
               &times;
             </button>
