@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ethers } from "ethers"; // For Web3 integration if needed
 import Confetti from "react-confetti";
 import "./DiceGame.css";
 
@@ -12,12 +13,33 @@ const DiceGame = () => {
   const [error, setError] = useState(null);
   const diceRef = useRef(null);
 
-  // Get window dimensions for confetti
+  // On mount, get window dimensions and balance from localStorage
   useEffect(() => {
     setDimensions({ width: window.innerWidth, height: window.innerHeight });
+    const storedBalance = localStorage.getItem("playerBalance");
+    if (storedBalance) {
+      setBalance(parseInt(storedBalance, 10));
+    } else {
+      localStorage.setItem("playerBalance", "1000");
+    }
+
+    // Basic Web3 integration: request wallet access if available
+    if (window.ethereum) {
+      window.ethereum
+        .request({ method: "eth_requestAccounts" })
+        .then((accounts) => {
+          console.log("Connected wallet:", accounts[0]);
+        })
+        .catch((err) => console.error(err));
+    }
   }, []);
 
-  // Function to trigger the dice roll animation
+  // Update localStorage when balance changes
+  useEffect(() => {
+    localStorage.setItem("playerBalance", balance.toString());
+  }, [balance]);
+
+  // Function to trigger dice animation
   const rollDiceEffect = (random) => {
     if (diceRef.current) {
       diceRef.current.style.animation = "rolling 4s";
@@ -49,7 +71,7 @@ const DiceGame = () => {
     }
   };
 
-  const handleRollDice = () => {
+  const handleRollDice = async () => {
     const betAmount = parseInt(bet);
     if (isNaN(betAmount) || betAmount <= 0) {
       setError("Please enter a valid bet amount.");
@@ -59,28 +81,50 @@ const DiceGame = () => {
       setError("Bet exceeds current balance!");
       return;
     }
-    // Clear any previous error
     setError(null);
 
-    // Generate a random number between 1 and 6
-    const random = Math.floor(Math.random() * 6) + 1;
-    rollDiceEffect(random);
+    // Generate a clientSeed (could be any random string)
+    const clientSeed = Math.random().toString(36).substring(2, 15);
 
-    setTimeout(() => {
-      setDiceRoll(random);
-      if (random >= 4) {
-        setBalance((prev) => prev - betAmount + 3 * betAmount);
-        setResult("win");
-        setShowConfetti(true);
-      } else {
-        setBalance((prev) => prev - betAmount);
-        setResult("loss");
-        setShowConfetti(true);
+    try {
+      const response = await fetch("http://localhost:5000/roll-dice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bet: betAmount, balance, clientSeed }),
+      });
+      const data = await response.json();
+      if (data.error) {
+        setError(data.error);
+        return;
       }
+      const { roll, newBalance, serverSeed, hashProof } = data;
+      // (Optional) You can log serverSeed, hashProof and clientSeed for provable fairness verification.
+      console.log("Server Seed:", serverSeed);
+      console.log("Hash Proof:", hashProof);
+      console.log("Client Seed:", clientSeed);
+
+      // Trigger dice animation based on the roll
+      rollDiceEffect(roll);
+
       setTimeout(() => {
-        setShowConfetti(false);
-      }, 5000);
-    }, 4050);
+        setDiceRoll(roll);
+        if (roll >= 4) {
+          setBalance(newBalance);
+          setResult("win");
+          setShowConfetti(true);
+        } else {
+          setBalance(newBalance);
+          setResult("loss");
+          setShowConfetti(true);
+        }
+        setTimeout(() => {
+          setShowConfetti(false);
+        }, 5000);
+      }, 4050);
+    } catch (err) {
+      console.error(err);
+      setError("Server error, please try again later.");
+    }
   };
 
   return (
@@ -88,7 +132,7 @@ const DiceGame = () => {
       {/* Error Alert */}
       {error && (
         <div
-          className="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4 dark:bg-red-800/10 dark:border-red-900 dark:text-red-500"
+          className="bg-red-50 border border-red-200 text-sm text-red-800 rounded-lg p-4 dark:bg-red-800/10 dark:border-red-900 dark:text-red-500 w-full max-w-md mb-4"
           role="alert"
           tabIndex="-1"
           aria-labelledby="hs-with-list-label"
@@ -120,7 +164,7 @@ const DiceGame = () => {
             </div>
             <button
               onClick={() => setError(null)}
-              className="ml-auto text-red-800 dark:text-red-500 text-xl font-bold cursor-pointer"
+              className="ml-auto text-red-800 dark:text-red-500 text-xl font-bold"
             >
               &times;
             </button>
